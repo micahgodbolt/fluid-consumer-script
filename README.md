@@ -1,46 +1,57 @@
-# Getting Started with Create React App
+# Fluid Consumer Script
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+### 1. Install CRA
 
-## Available Scripts
+```bash
+npx create-react-app my-app --template typescript
+```
 
-In the project directory, you can run:
+### 2. Install Fluid and Fluid Data Objects
 
-### `yarn start`
+```bash
+cd my-app-name
+npm install @fluid-experimental/fluid @fluid-experimental/data-objects
+```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+### 3. Import KVpair and Fluid
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+```js
+import {
+  KeyValueDataObject,
+  KeyValueInstantiationFactory,
+} from "@fluid-experimental/data-objects";
+import { Fluid } from "./fluid";
+```
 
-### `yarn test`
+## Questions
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+1. should we just switch to resolve for Containers? Commonly requested
+2. Does having just a getDataObject oversimplify things? Is depth there?
+3. Could you run getDataObject (w/ createnew) 2x w/ diff DO's on the same container?
+4. How do we simplify the useKVPair export to have more keyvalue semantics?
 
-### `yarn build`
+---
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. Does the useKVPair method need to be performant?
+2. Can the useKvPair.Get require O(N) work?
+3. Can the UsekvPair.Set always trigger an entire dom refresh?
+4. Can you ugprade to a new syntax once our limtied perf runs out?
+5. How far does this need to scale with this syntax?
+6. If our funnel (CRA getting started app) is really simple, does the eventual use case need to follow the same syntax?
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Things to Solve
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- We have to store all the data in one key value pair
+  - All of the data currently needs to be updated at once (you can't sepeartely collaborate on different parts)
+- As currently written, it appears that we'd need to translate the Map object into a JS native object
+- How do we have multiple KV pairs in this example? (May be optional)
 
-### `yarn eject`
+## Notes
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+- Ideally values are sub 1KB
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Options
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+1. Redux model... getter/setter per key on the keyvalue
+   1. then we don't have all of our data in one key/value pair
+2. Pass the MapKernal.data Map() into setState (is this possible?)
