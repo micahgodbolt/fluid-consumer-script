@@ -1,11 +1,10 @@
 import React from 'react';
-import { KeyValueDataObject } from "@fluid-experimental/data-objects"
+import { KeyValueDataObject } from "./kvpair"
 import { Fluid, getContainerId } from './fluid';
 
-function useKVPair<T>(defaultData: T): [T, (data: T) => void] {
+function useKVPair() {
   const [dataObject, setDataObject] = React.useState<KeyValueDataObject>();
-  const [state, setState] = React.useState<T>(defaultData);
-  const DATA_KEY = 'data';
+  const [state, setInternalState] = React.useState<{ [key: string]: any }>({});
 
   // Connect to container and data object
   React.useEffect(() => {
@@ -15,36 +14,42 @@ function useKVPair<T>(defaultData: T): [T, (data: T) => void] {
       containerId,
       KeyValueDataObject,
       isNew
-    ).then(returnedObject => {
-      isNew && returnedObject?.set(DATA_KEY, defaultData);
-      setDataObject(returnedObject);
+    ).then(obj => {
+      setDataObject(obj);
+      !isNew && setInternalState(obj.getAll())
     })
   }, [])
 
+
   // set up sync from data object to local state
   React.useEffect(() => {
-    const syncState = () => dataObject && setState(dataObject.get(DATA_KEY));
+    if (dataObject) {
+      const updateState = ({ key }: any) => {
+        const updatedItem = { [key]: dataObject.get(key) }
+        setInternalState((s) => ({ ...s, ...updatedItem }))
+      }
+      dataObject?.on('changed', updateState);
+      return () => { dataObject?.off("change", updateState) }
+    }
 
-    syncState();
-    dataObject?.on('changed', syncState);
-    return () => { dataObject?.off("change", syncState) }
   }, [dataObject])
 
   // Method to write to Fluid data. 
-  const setData = (newData: T) => {
-    dataObject?.set(DATA_KEY, newData)
+  const setState = (key: string, value: any) => {
+    dataObject?.set(key, value)
   }
 
-  return [state, setData];
+  return { state, setState };
 }
 
 function App() {
-  const currentDate = Date.now().toString();
-  const [data, setData] = useKVPair({ time: currentDate });
+  const getCurrentDate = () => Date.now().toString();
+  const { state, setState } = useKVPair();
 
   return (
     <div className="App">
-      <button onClick={() => setData({ time: currentDate })} > {data.time} </button>
+      <button onClick={() => setState('date', getCurrentDate())} > click </button>
+      {state && <span>{state.date}</span>}
     </div>
   )
 }
