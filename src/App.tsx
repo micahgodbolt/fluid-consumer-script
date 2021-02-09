@@ -35,20 +35,31 @@ function useKVPair() {
   }, [dataObject])
 
   // Method to write to Fluid data. 
-  const setData = (key: string, value: any) => {
+  const setData = React.useCallback((key: string, value: any) => {
     dataObject?.set(key, value)
-  }
+  }, [dataObject])
 
   return { data: state, setData };
 }
+
+const TimeStamp = React.memo((props: any) => {
+  const handleClick = () => props.setData(props.name, Date.now().toString());
+  return (
+    <div>
+      <button onClick={handleClick} > click </button>
+      <span>{props.date}</span>
+    </div>
+  )
+})
+
 
 function App() {
   const { data, setData } = useKVPair();
 
   return (
     <div className="App">
-      <button onClick={() => setData('date', Date.now().toString())} > click </button>
-      {data && <span>{data.date}</span>}
+      <TimeStamp setData={setData} name={'date'} date={data.date} />
+      <TimeStamp setData={setData} name={'time'} date={data.time} />
     </div>
   )
 }
