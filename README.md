@@ -15,12 +15,44 @@ npm install @fluid-experimental/fluid @fluid-experimental/data-objects
 
 ### 3. Import KVpair and Fluid
 
+KeyValueDataObject will provide you with a fully scaffolded DDS to store your data and subscribe to listen for changes.
+
+Fluid gives you access to methods that will bootstrap a new Fluid container, and we use the `getContainerId` helper method to simplify the creation and sharing of multi-author, Fluid sessions.
+
 ```js
-import {
-  KeyValueDataObject,
-  KeyValueInstantiationFactory,
-} from "@fluid-experimental/data-objects";
-import { Fluid } from "./fluid";
+import { KeyValueDataObject } from "@fluid-experimental/data-objects";
+import { Fluid, getContainerId } from "./fluid";
+```
+
+### 4. Update the view
+
+In this simple multi-user app, we are going to build a button that, when pressed, shows the current time stamp. This allows co-authors to see the most recent timestamp at which the other authors pressed the button.
+
+Remove all of the existing returned markup and replace it as shown below.
+
+You can see that this UI requires a `data` object and `setData` functions to work, so we'll add those above and pull them out of a special React function we'll call `useKVPair`.
+
+```tsx
+function App() {
+  const { data, setData } = useKVPair();
+
+  return (
+    <div className="App">
+      <button onClick={() => setData("date", Date.now().toString())}>
+        click
+      </button>
+      {data && <span>{data.date}</span>}
+    </div>
+  );
+}
+```
+
+### 5. Create a custom hook
+
+Working in React, one of the best ways to abstract complex, reusable functionality is via a custom hook. Custom hooks are functions that have access to the built in React hooks like `useState` and `useEffect` which we'll need in order to load our Fluid DataObject, and track our local state.
+
+```tsx
+const useKVPair = () => {};
 ```
 
 ## Questions
