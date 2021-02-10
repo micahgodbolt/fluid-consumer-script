@@ -29,21 +29,20 @@ function useKVPair() {
     return () => { objRef.current?.off("changed", invalidateState) }
   }, [invalidate])
 
-  return { kvpair: objRef.current };
+  return { setData: objRef.current?.set, data: objRef.current?.getAll() };
 }
 
 
 function App() {
-  const { kvpair } = useKVPair();
+  const { setData, data } = useKVPair();
 
-  if (kvpair === undefined) return <></>;
+  if (setData === undefined) return <></>;
 
-  const handleClick = () => { kvpair.set('date', Date.now().toString()) };
-  const { date } = kvpair.getAll();
+  const handleClick = () => { setData('date', Date.now().toString()) };
   return (
     <div className="App">
       <button onClick={handleClick} > click </button>
-      <span>{date}</span>
+      <span>{data?.date}</span>
     </div>
   )
 }
