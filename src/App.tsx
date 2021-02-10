@@ -3,8 +3,8 @@ import { KeyValueDataObject } from "./kvpair"
 import { Fluid, getContainerId } from './fluid';
 
 function useKVPair() {
-  const [dataObject, setDataObject] = React.useState<KeyValueDataObject>();
-  const [state, setState] = React.useState<{ [key: string]: any }>({});
+  const objRef = React.useRef<KeyValueDataObject>();
+  const [invalidate, setInvalid] = React.useState<[]>([]);
 
   // Connect to container and data object
   React.useEffect(() => {
@@ -15,51 +15,35 @@ function useKVPair() {
       KeyValueDataObject,
       isNew
     ).then(obj => {
-      setDataObject(obj);
-      !isNew && setState(obj.getAll())
+      objRef.current = obj;
+      setInvalid([])
     })
   }, [])
 
 
   // set up sync from data object to local state
   React.useEffect(() => {
-    if (dataObject) {
-      const updateState = (change: any) => {
-        const { key } = change;
-        const updatedItem = { [key]: dataObject.get(key) }
-        setState((s) => ({ ...s, ...updatedItem }))
-      }
-      dataObject.on('changed', updateState);
-      return () => { dataObject.off("change", updateState) }
-    }
-  }, [dataObject])
+    const invalidateState = () => { setInvalid([]) };
 
-  // Method to write to Fluid data. 
-  const setData = React.useCallback((key: string, value: any) => {
-    dataObject?.set(key, value)
-  }, [dataObject])
+    objRef.current?.on('changed', invalidateState);
+    return () => { objRef.current?.off("changed", invalidateState) }
+  }, [invalidate])
 
-  return { data: state, setData };
+  return { kvpair: objRef.current };
 }
-
-const TimeStamp = React.memo((props: any) => {
-  const handleClick = () => props.setData(props.name, Date.now().toString());
-  return (
-    <div>
-      <button onClick={handleClick} > click </button>
-      <span>{props.date}</span>
-    </div>
-  )
-})
 
 
 function App() {
-  const { data, setData } = useKVPair();
+  const { kvpair } = useKVPair();
 
+  if (kvpair === undefined) return <></>;
+
+  const handleClick = () => { kvpair.set('date', Date.now().toString()) };
+  const { date } = kvpair.getAll();
   return (
     <div className="App">
-      <TimeStamp setData={setData} name={'date'} date={data.date} />
-      <TimeStamp setData={setData} name={'time'} date={data.time} />
+      <button onClick={handleClick} > click </button>
+      <span>{date}</span>
     </div>
   )
 }
